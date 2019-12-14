@@ -13,8 +13,8 @@ import copy
 import pickle
 from tqdm import tqdm
 
-from parameter_server_pb2 import Gradient, Weight, Model
-from proto_utils import load_proto, model_to_proto
+from parameter_server_pb2 import Gradient, GradientUpdate, Weight, Model
+from proto_utils import load_proto, model_to_proto, gradients_to_proto
 
 def compare_models(model1, model2):
     cpu = torch.device('cpu')
@@ -43,6 +43,8 @@ def train_model(model, criterion, optimizer, train_loader):
     correct = 0
     model.train()
 
+    gradient_updates = []
+
     for x, y in tqdm(train_loader):
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
@@ -51,6 +53,7 @@ def train_model(model, criterion, optimizer, train_loader):
         loss = criterion(outputs, y)
 
         loss.backward()
+        gradient_updates.append(gradients_to_proto(model))
         optimizer.step()
 
         with torch.no_grad():
@@ -62,6 +65,7 @@ def train_model(model, criterion, optimizer, train_loader):
     n_train = len(train_loader.dataset)
     print(f"Finished in {time.time() - start_time} seconds.")
     print(f"Train acc={correct / n_train}, train loss={cum_loss / n_train}.")
+    return gradient_updates
 
 
 ### DATA 
@@ -99,21 +103,15 @@ model = create_model()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 criterion = nn.CrossEntropyLoss()
 
-# Train for 1 epoch and save to proto
-train_model(model, criterion, optimizer, train_loader)
-model_proto = model_to_proto(model)
+# Train for 1 epoch
+grad_updates1 = train_model(model, criterion, optimizer, train_loader)
+print(len(grad_updates1))
+
 
 
 # Create new model and load from protobuf
 model2 = create_model()
 optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
-load_proto(model2, model_proto)
-print("Models are the same?", compare_models(model, model2))
-train_model(model2, criterion, optimizer2, train_loader)
+grad_updates2 = train_model(model2, criterion, optimizer2, train_loader)
 
-# Reset to 1 epoch completed
-load_proto(model2, model_proto)
-train_model(model2, criterion, optimizer2, train_loader)
 
-# Train for another epoch
-train_model(model2, criterion, optimizer2, train_loader)

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x16parameter_server.proto\"(\n\x08Gradient\x12\r\n\x05index\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x0c\"&\n\x06Weight\x12\r\n\x05index\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x0c\"!\n\x05Model\x12\x18\n\x07weights\x18\x01 \x03(\x0b\x32\x07.Weightb\x06proto3')
+  serialized_pb=_b('\n\x16parameter_server.proto\"(\n\x08Gradient\x12\r\n\x05index\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x0c\".\n\x0eGradientUpdate\x12\x1c\n\tgradients\x18\x01 \x03(\x0b\x32\t.Gradient\"&\n\x06Weight\x12\r\n\x05index\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x0c\"!\n\x05Model\x12\x18\n\x07weights\x18\x01 \x03(\x0b\x32\x07.Weightb\x06proto3')
 )
 
 
@@ -63,6 +63,37 @@ _GRADIENT = _descriptor.Descriptor(
 )
 
 
+_GRADIENTUPDATE = _descriptor.Descriptor(
+  name='GradientUpdate',
+  full_name='GradientUpdate',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='gradients', full_name='GradientUpdate.gradients', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=68,
+  serialized_end=114,
+)
+
+
 _WEIGHT = _descriptor.Descriptor(
   name='Weight',
   full_name='Weight',
@@ -96,8 +127,8 @@ _WEIGHT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=68,
-  serialized_end=106,
+  serialized_start=116,
+  serialized_end=154,
 )
 
 
@@ -127,12 +158,14 @@ _MODEL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=108,
-  serialized_end=141,
+  serialized_start=156,
+  serialized_end=189,
 )
 
+_GRADIENTUPDATE.fields_by_name['gradients'].message_type = _GRADIENT
 _MODEL.fields_by_name['weights'].message_type = _WEIGHT
 DESCRIPTOR.message_types_by_name['Gradient'] = _GRADIENT
+DESCRIPTOR.message_types_by_name['GradientUpdate'] = _GRADIENTUPDATE
 DESCRIPTOR.message_types_by_name['Weight'] = _WEIGHT
 DESCRIPTOR.message_types_by_name['Model'] = _MODEL
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -143,6 +176,13 @@ Gradient = _reflection.GeneratedProtocolMessageType('Gradient', (_message.Messag
   # @@protoc_insertion_point(class_scope:Gradient)
   ))
 _sym_db.RegisterMessage(Gradient)
+
+GradientUpdate = _reflection.GeneratedProtocolMessageType('GradientUpdate', (_message.Message,), dict(
+  DESCRIPTOR = _GRADIENTUPDATE,
+  __module__ = 'parameter_server_pb2'
+  # @@protoc_insertion_point(class_scope:GradientUpdate)
+  ))
+_sym_db.RegisterMessage(GradientUpdate)
 
 Weight = _reflection.GeneratedProtocolMessageType('Weight', (_message.Message,), dict(
   DESCRIPTOR = _WEIGHT,

@@ -12,7 +12,7 @@ import copy
 import pickle
 
 from parameter_server_pb2 import Gradient, Weight, Model
-
+from proto_utils import load_proto, model_to_proto
 
 
 model = models.resnet18()
@@ -48,21 +48,11 @@ print(pickle.dumps(x.grad))
 print(pickle.loads(pickle.dumps(x.grad)))
 
 
+proto = model_to_proto(model)
+print(len(proto.weights))
 
-start = time.time()
-model_proto = Model()
-for idx, param in enumerate(model.parameters()):
-    weight = model_proto.weights.add()
-    weight.index = idx
-    weight.value = pickle.dumps(param)
-print(f"Model serialized in {time.time() - start} seconds")
 
-start = time.time()
-with torch.no_grad():
-    for i, weight in enumerate(model.parameters()):
-        loaded_tensor = pickle.loads(model_proto.weights[i].value).data
-        weight.copy_(loaded_tensor)
-print(f"Model deserialized in {time.time() - start} seconds")
+load_proto(model, proto)
 
 
 
