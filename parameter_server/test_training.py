@@ -57,7 +57,6 @@ def train_model(model, criterion, optimizer, train_loader):
     print(device)
     model = model.to(device)
 
-
     # Training for 1 epoch
     cum_loss = 0.0
     correct = 0
@@ -79,28 +78,9 @@ def train_model(model, criterion, optimizer, train_loader):
             cum_loss += loss.item()
 
 
-
-
-    # for i, data in enumerate(train_loader):
-    #     inputs, labels = data[0].to(device), data[1].to(device)
-
-    #     optimizer.zero_grad()
-
-    #     outputs = model(inputs)
-    #     loss = criterion(outputs, labels)
-    #     loss.backward()
-    #     optimizer.step()
-        
-    #     with torch.no_grad():
-    #       _, max_labels = outputs.max(1)
-    #       correct += (max_labels == labels).sum().item()
-    #       cum_loss += loss.item()
-
     n_train = len(train_loader.dataset)
     print(f"Finished in {time.time() - start_time} seconds.")
     print(f"Train acc={correct / n_train}, train loss={cum_loss / n_train}.")
-    # train_acc.append(correct / n_train)
-    # train_loss.append(cum_loss / n_train)
 
 
 ### DATA 
@@ -146,14 +126,18 @@ model_proto = model_to_proto(model)
 
 
 model2 = create_model()
+optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
 load_proto(model2, model_proto)
 
 
 print("Models are the same?", compare_models(model, model2))
 
 
-train_model(model2, criterion, optimizer, train_loader)
+train_model(model2, criterion, optimizer2, train_loader)
 
+
+load_proto(model2, model_proto)
+train_model(model2, criterion, optimizer2, train_loader)
 
 # load_proto(model, model_proto)
 # train_model(model, criterion, optimizer, DataLoader(mnist_train, batch_size = batch_size, shuffle = True, num_workers = 0))
