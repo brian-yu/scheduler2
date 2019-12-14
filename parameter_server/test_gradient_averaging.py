@@ -140,8 +140,6 @@ mock_ps = MockPS(create_model(), lr = 0.001)
 
 # Train for 1 epoch
 train_model(model, criterion, optimizer, train_loader, mock_ps)
-print(len(grad_updates1))
-
 
 
 # Create new model and load from protobuf
