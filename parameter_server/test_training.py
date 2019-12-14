@@ -11,6 +11,7 @@ import time
 import os
 import copy
 import pickle
+from tqdm import tqdm
 
 from parameter_server_pb2 import Gradient, Weight, Model
 
@@ -59,11 +60,9 @@ def train_model(model, criterion, optimizer, train_loader):
     cum_loss = 0.0
     correct = 0
     model.train()
-    i = 0
-    for x, y in train_loader:
+
+    for x, y in tqdm(train_loader):
         x, y = x.to(device), y.to(device)
-        print(f"{i} / {len(train_loader)}")
-        i += 1
         optimizer.zero_grad()
 
         outputs = model(x)
@@ -151,7 +150,7 @@ load_proto(model2, model_proto)
 print("Models are the same?", compare_models(model, model2))
 
 
-train_model(model2, criterion, optimizer, DataLoader(mnist_train, batch_size = batch_size, shuffle = True, num_workers = 0))
+train_model(model2, criterion, optimizer, train_loader)
 
 
 # load_proto(model, model_proto)
