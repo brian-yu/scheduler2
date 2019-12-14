@@ -33,6 +33,8 @@ def load_proto(model, proto):
     print(f"Model deserialized in {time.time() - start} seconds")
 
 def compare_models(model1, model2):
+    cpu = torch.device('cpu')\
+    model1, model2 = model1.to(cpu), model2.to(cpu)
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
         if p1.data.ne(p2.data).sum() > 0:
             return False
@@ -59,7 +61,6 @@ def train_model(model, criterion, optimizer, train_loader):
     model.train()
     i = 0
     for x, y in train_loader:
-        if i > 10: break
         x, y = x.to(device), y.to(device)
         print(f"{i} / {len(train_loader)}")
         i += 1
