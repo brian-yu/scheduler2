@@ -12,6 +12,7 @@ import os
 import copy
 import pickle
 from tqdm import tqdm
+import defaultdict
 
 from parameter_server_pb2 import Gradient, GradientUpdate, Weight, Model
 from proto_utils import load_proto, model_to_proto, gradients_to_proto
@@ -25,13 +26,50 @@ def compare_models(model1, model2):
     return True
 
 
-def create_model():
-    model = models.alexnet()
-    model.classifier[6] = nn.Linear(4096, 10)
-    return model
+def create_model(arch="alexnet"):
+    if arch == "resnet":
+        model = models.resnet18()
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, 10)
+        return model
+    elif arch == "alexnet":
+        model = models.alexnet()
+        model.classifier[6] = nn.Linear(4096, 10)
+        return model
+    else:
+        raise Exception("Invalid model architecture.")
 
 
-def train_model(model, criterion, optimizer, train_loader):
+class MockPS:
+    def __init__(self, model, lr):
+        self.gradients = []
+        self.model = model
+        self.threshold = 15
+        self.lr = lr
+
+    def add_gradient(self, gradient_update):
+        self.gradients.append(gradient_update)
+        if len(self.gradients) > self.threshold:
+            self.average_gradients()
+
+    def average_gradients(self):
+        param_grads = defaultdict(list)
+        for grad_update in self.gradients:
+            for grad in grad_update.gradients:
+                param_grads[grad.index].append(pickle.loads(grad.value))
+
+        self.gradients = []
+
+        for idx, param in enumerate(self.model.parameters()):
+            mean = torch.mean(torch.stack(param_grads[idx]))
+            param.data -= self.lr * mean
+
+    def get_model(self):
+        return model_to_proto(self.model)
+
+
+
+def train_model(model, criterion, optimizer, train_loader, ps):
     start_time = time.time()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -43,8 +81,6 @@ def train_model(model, criterion, optimizer, train_loader):
     correct = 0
     model.train()
 
-    gradient_updates = []
-
     for x, y in tqdm(train_loader):
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
@@ -53,7 +89,7 @@ def train_model(model, criterion, optimizer, train_loader):
         loss = criterion(outputs, y)
 
         loss.backward()
-        gradient_updates.append(gradients_to_proto(model))
+        ps.add_gradient(gradients_to_proto(model))
         optimizer.step()
 
         with torch.no_grad():
@@ -103,8 +139,11 @@ model = create_model()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 criterion = nn.CrossEntropyLoss()
 
+
+mock_ps = MockPS(create_model(), lr = 0.001)
+
 # Train for 1 epoch
-grad_updates1 = train_model(model, criterion, optimizer, train_loader)
+grad_updates1 = train_model(model, criterion, optimizer, train_loader, mock_ps)
 print(len(grad_updates1))
 
 
@@ -112,6 +151,9 @@ print(len(grad_updates1))
 # Create new model and load from protobuf
 model2 = create_model()
 optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
-grad_updates2 = train_model(model2, criterion, optimizer2, train_loader)
+grad_updates2 = train_model(model2, criterion, optimizer2, train_loader, mock_ps)
 
 
+model3 = create_model()
+optimizer3 = optim.SGD(model3.parameters(), lr=0.001, momentum=0.9)
+load_proto(model3, mock_ps.get_model())
