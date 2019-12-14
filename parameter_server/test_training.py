@@ -118,27 +118,21 @@ model = create_model()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 criterion = nn.CrossEntropyLoss()
 
-
+# Train for 1 epoch and save to proto
 train_model(model, criterion, optimizer, train_loader)
-
 model_proto = model_to_proto(model)
 
 
-
+# Create new model and load from protobuf
 model2 = create_model()
 optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
 load_proto(model2, model_proto)
-
-
 print("Models are the same?", compare_models(model, model2))
-
-
 train_model(model2, criterion, optimizer2, train_loader)
 
-
+# Reset to 1 epoch completed
 load_proto(model2, model_proto)
 train_model(model2, criterion, optimizer2, train_loader)
 
-# load_proto(model, model_proto)
-# train_model(model, criterion, optimizer, DataLoader(mnist_train, batch_size = batch_size, shuffle = True, num_workers = 0))
-
+# Train for another epoch
+train_model(model2, criterion, optimizer2, train_loader)
