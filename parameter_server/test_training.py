@@ -27,10 +27,12 @@ def model_to_proto(model):
 
 def load_proto(model, proto):
     start = time.time()
-    with torch.no_grad():
-        for i, weight in enumerate(model.parameters()):
-            loaded_tensor = pickle.loads(proto.weights[i].value).data
-            weight.copy_(loaded_tensor)
+    # with torch.no_grad():
+    #     for i, weight in enumerate(model.parameters()):
+    #         loaded_tensor = pickle.loads(proto.weights[i].value).data
+    #         weight.copy_(loaded_tensor)
+    for i, weight in enumerate(model.parameters()):
+        weight.data = pickle.loads(proto.weights[i].value).data
     print(f"Model deserialized in {time.time() - start} seconds")
 
 def compare_models(model1, model2):
