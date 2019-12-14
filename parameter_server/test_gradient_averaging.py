@@ -46,7 +46,7 @@ class MockPS:
 
     def add_gradient(self, gradient_update):
         self.gradients.append(gradient_update)
-        if len(self.gradients) > self.threshold:
+        if len(self.gradients) >= self.threshold:
             self.average_gradients()
 
     def average_gradients(self):
@@ -98,7 +98,6 @@ def train_model(model, criterion, optimizer, train_loader, ps):
     n_train = len(train_loader.dataset)
     print(f"Finished in {time.time() - start_time} seconds.")
     print(f"Train acc={correct / n_train}, train loss={cum_loss / n_train}.")
-    return gradient_updates
 
 
 ### DATA 
@@ -140,7 +139,7 @@ criterion = nn.CrossEntropyLoss()
 mock_ps = MockPS(create_model(), lr = 0.001)
 
 # Train for 1 epoch
-grad_updates1 = train_model(model, criterion, optimizer, train_loader, mock_ps)
+train_model(model, criterion, optimizer, train_loader, mock_ps)
 print(len(grad_updates1))
 
 
@@ -148,9 +147,11 @@ print(len(grad_updates1))
 # Create new model and load from protobuf
 model2 = create_model()
 optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
-grad_updates2 = train_model(model2, criterion, optimizer2, train_loader, mock_ps)
+train_model(model2, criterion, optimizer2, train_loader, mock_ps)
 
 
-model3 = create_model()
-optimizer3 = optim.SGD(model3.parameters(), lr=0.001, momentum=0.9)
-load_proto(model3, mock_ps.get_model())
+# model3 = create_model()
+# optimizer3 = optim.SGD(model3.parameters(), lr=0.001, momentum=0.9)
+load_proto(model2, mock_ps.get_model())
+
+train_model(model2, criterion, optimizer2, train_loader, mock_ps)
