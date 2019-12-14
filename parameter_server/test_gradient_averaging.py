@@ -148,8 +148,9 @@ optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
 train_model(model2, criterion, optimizer2, train_loader, mock_ps)
 
 
-# model3 = create_model()
-# optimizer3 = optim.SGD(model3.parameters(), lr=0.001, momentum=0.9)
-load_proto(model2, mock_ps.get_model())
+model3 = create_model()
+optimizer3 = optim.SGD(model3.parameters(), lr=0.001, momentum=0.9)
+load_proto(model3, mock_ps.get_model())
 
-train_model(model2, criterion, optimizer2, train_loader, mock_ps)
+train_model(model3, criterion, optimizer3, train_loader, mock_ps)
+train_model(model3, criterion, optimizer3, train_loader, mock_ps)
