@@ -6,13 +6,10 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
 import time
-import os
-import copy
 import pickle
 from tqdm import tqdm
-import defaultdict
+from collections import defaultdict
 
 from parameter_server_pb2 import Gradient, GradientUpdate, Weight, Model
 from proto_utils import load_proto, model_to_proto, gradients_to_proto
