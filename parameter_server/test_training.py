@@ -99,6 +99,13 @@ model = create_model()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 criterion = nn.CrossEntropyLoss()
 
+print(model)
+model_proto = model_to_proto(model, log=True)
+# print(len(model_proto.weights))
+# print(pickle.loads(model_proto.weights[0].value))
+
+print([name for name, _ in model.named_parameters()])
+
 # Train for 1 epoch and save to proto
 train_model(model, criterion, optimizer, train_loader)
 model_proto = model_to_proto(model)

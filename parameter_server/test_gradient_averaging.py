@@ -59,6 +59,11 @@ class MockPS:
 
         for idx, param in enumerate(self.model.parameters()):
             mean = torch.mean(torch.stack(param_grads[idx]))
+            # really need adaptive learning rate
+            # need to handle optimization logic here.
+            # maybe can use an existing pytorch optimizer.
+
+            # use optimizer here instead of this
             param.data -= self.lr * mean
 
     def get_model(self):
@@ -79,15 +84,27 @@ def train_model(model, criterion, optimizer, train_loader, ps):
     model.train()
 
     for x, y in tqdm(train_loader):
+
+        # retrieve model state from 
+        # model_proto = fetch_from_ps()
+        # load_proto(model, model_proto)
+
         x, y = x.to(device), y.to(device)
-        optimizer.zero_grad()
+        optimizer.zero_grad() # PS JOB
 
         outputs = model(x)
         loss = criterion(outputs, y)
 
         loss.backward()
+
+        # need to send the gradients to the parameter server
+        # the parameter server then needs to set the gradients of
+        # the parameters of its own model to the average
+        # and then run optimizer.step() on its own model
         ps.add_gradient(gradients_to_proto(model))
-        optimizer.step()
+
+        # workers shouldn't even need an optimizer after PS is implemented.
+        optimizer.step() # PS JOB
 
         with torch.no_grad():
             _, pred = outputs.max(1)
@@ -142,7 +159,7 @@ mock_ps = MockPS(create_model(), lr = 0.001)
 train_model(model, criterion, optimizer, train_loader, mock_ps)
 
 
-# Create new model and load from protobuf
+# Create new model and train
 model2 = create_model()
 optimizer2 = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
 train_model(model2, criterion, optimizer2, train_loader, mock_ps)
