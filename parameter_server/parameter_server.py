@@ -1,6 +1,5 @@
 from concurrent import futures
 import time
-import math
 import logging
 
 import grpc
@@ -14,10 +13,19 @@ from collections import defaultdict
 import numpy as np
 import torchvision
 
-from proto_utils import model_to_proto, update_gradients
+from proto_utils import model_to_proto
 from torch_utils import create_model
 import parameter_server_pb2
 import parameter_server_pb2_grpc
+
+def update_gradients(model, proto, log=False):
+    start = time.time()
+    with torch.no_grad():
+        for i, param in enumerate(model.parameters()):
+            gradient = pickle.loads(proto.gradients[i].value)
+            param.grad = gradient
+    if log:
+        print(f"Gradients updated in {time.time() - start} seconds")
 
 
 class ParameterServerServicer(parameter_server_pb2_grpc.ParameterServerServicer):
@@ -25,11 +33,14 @@ class ParameterServerServicer(parameter_server_pb2_grpc.ParameterServerServicer)
 
     def __init__(self):
         self.model = create_model()
-        optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9)
+        self.optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9)
+        self.gradients = []
+        self.threshold = 5
 
     def UpdateGradients(self, request, context):
+        self.optimizer.zero_grad()
         update_gradients(self.model, request)
-        optimizer.step()
+        self.optimizer.step()
         return parameter_server_pb2.GradientUpdateResponse()
 
     def GetModel(self, request, context):
@@ -37,7 +48,8 @@ class ParameterServerServicer(parameter_server_pb2_grpc.ParameterServerServicer)
 
 
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    options = [('grpc.max_receive_message_length', 500 * 2**20)]
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=options)
     parameter_server_pb2_grpc.add_ParameterServerServicer_to_server(
         ParameterServerServicer(), server)
     server.add_insecure_port('[::]:50051')
