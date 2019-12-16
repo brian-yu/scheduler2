@@ -43,6 +43,12 @@ class ParameterServerServicer(parameter_server_pb2_grpc.ParameterServerServicer)
         self.optimizer.step()
         return parameter_server_pb2.GradientUpdateResponse()
 
+
+        # self.gradients.append(gradient_update)
+        # if len(self.gradients) >= self.threshold:
+        #     print("Averaging gradients")
+        #     self.average_gradients()
+
     def GetModel(self, request, context):
         return model_to_proto(self.model)
 
