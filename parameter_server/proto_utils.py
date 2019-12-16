@@ -38,3 +38,12 @@ def gradients_to_proto(model, log=False):
     if log:
         print(f"Model gradients serialized in {time.time() - start} seconds")
     return gradient_proto
+
+def update_gradients(model, log=False):
+    start = time.time()
+    with torch.no_grad():
+        for i, param in enumerate(model.parameters()):
+            gradient = pickle.loads(proto.gradients[i].value)
+            param.grad = gradient
+    if log:
+        print(f"Gradients updated in {time.time() - start} seconds")

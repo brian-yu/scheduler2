@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-// compile with protoc --python_out=. parameter_server.proto
+// Compile with:
+// python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. parameter_server.proto
 
 message Gradient {
     int32 index = 1;
@@ -11,6 +12,10 @@ message GradientUpdate{
     repeated Gradient gradients = 1;
 }
 
+message GradientUpdateResponse {
+
+}
+
 message Weight {
     int32 index = 1;
     bytes value = 2;
@@ -18,4 +23,14 @@ message Weight {
 
 message Model {
     repeated Weight weights = 1;
+}
+
+message ModelRequest {
+
+}
+
+
+service ParameterServer {
+    rpc UpdateGradients(GradientUpdate) returns (GradientUpdateResponse) {}
+    rpc GetModel(ModelRequest) returns (Model) {}
 }
